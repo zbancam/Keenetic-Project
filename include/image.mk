@@ -33,30 +33,30 @@ NDM_FIRMWARE_VERSION = $(shell echo $(CONFIG_TARGET_VERSION) | \
 NDM_FIRMWARE_DATE := $(shell date +%Y%m%d_%H%M)
 
 NDM_HARDWARE_ID   = $(shell echo $(CONFIG_TARGET_ARCH_PACKAGES))
-NDM_FIRMWARE_ID   = $(if $(filter KN-%,$(NDM_HARDWARE_ID)),$(NDM_HARDWARE_ID),$(NDM_DEVICE_NAME))
+NDM_FIRMWARE_ID   = $(if $(strip $(foreach p,KN-% ZN-%,$(filter $p,$(NDM_HARDWARE_ID)))),$(NDM_HARDWARE_ID),$(NDM_DEVICE_NAME))
 NDM_FIRMWARE_FNAME = $(NDM_FIRMWARE_DATE)_Firmware-$(NDM_FIRMWARE_ID)-$(NDM_FIRMWARE_VERSION).bin
 NDM_FIRMWARE_SIZE_FNAME = $(NDM_FIRMWARE_FNAME:bin=siz)
 
-NDM_KMOD_ONDEMAND ?= drxvi314 u200 igmpsn hw_nat whnat pppoe_pt ipv6_pt
-NDM_KMOD_ONDEMAND += mt7603_ap mt7610_ap mt76x2_ap mt7613_ap mt7628_ap mt7615_ap mt7915_ap
+NDM_KMOD_ONDEMAND ?= drxvi314 u200 igmpsn hw_nat whnat warp_proxy pppoe_pt ipv6_pt
+NDM_KMOD_ONDEMAND += mt7603_ap mt7610_ap mt76x2_ap mt7613_ap mt7628_ap mt7615_ap mt7915_ap mt7916_ap
 NDM_KMOD_ONDEMAND += osal_kernel ve_vtsp_hw ve_vtsp_rt pcmdriver_slic cc
 NDM_KMOD_ONDEMAND += ntc ntce nnfm rtsoc_eth ensoc_eth fastvpn vdsl zram nacct
-NDM_KMOD_ONDEMAND += crypto_aes_engine eip93_cryptoapi tcrypt mt7621_eth mt7622_eth
+NDM_KMOD_ONDEMAND += crypto_aes_engine eip93_cryptoapi tcrypt mt7621_eth mt7622_eth mt7986_eth
 NDM_KMOD_ONDEMAND += ensoc_flt ensoc_dmt ensoc_dsl
 NDM_KMOD_ONDEMAND += ipt_NETFLOW iptable_raw
 
 NDM_KMOD_ONDEMAND += xt_DSCP xt_statistic ip6t_ah xt_length xt_CLASSIFY xt_dscp
 NDM_KMOD_ONDEMAND += xt_hl ipt_ah ipt_ECN xt_ecn xt_comment xt_string
 NDM_KMOD_ONDEMAND += xt_recent xt_connbytes
-NDM_KMOD_ONDEMAND += xt_NETMAP xt_u32 ip6t_MASQUERADE arptable_filter
+NDM_KMOD_ONDEMAND += xt_u32 arptable_filter
 NDM_KMOD_ONDEMAND += ipcomp ipcomp6 xfrm_ipcomp xfrm6_mode_beet ip6_vti xfrm6_tunnel
 NDM_KMOD_ONDEMAND += esp6 ah6 ip_vti xfrm6_mode_tunnel xfrm6_mode_transport
 NDM_KMOD_ONDEMAND += ip6table_nat xt_ipp2p xt_TEE ip6t_hbh
 NDM_KMOD_ONDEMAND += xt_TEE ah4 xt_geoip xt_iprange ip6t_rt xt_addrtype
 NDM_KMOD_ONDEMAND += ip6t_mh xt_IPMARK xt_ACCOUNT xt_iface xfrm4_mode_beet
 NDM_KMOD_ONDEMAND += xt_time xt_DNETMAP xt_socket xt_length2 xt_fuzzy xt_ipv4options
-NDM_KMOD_ONDEMAND += xt_DELUDE xt_CHAOS nf_nat_masquerade_ipv6 ip6t_NPT xt_NFQUEUE xt_NFLOG
-NDM_KMOD_ONDEMAND += ip6t_ipv6header xt_hashlimit xt_connlimit xt_LOGMARK
+NDM_KMOD_ONDEMAND += xt_DELUDE xt_CHAOS ip6t_NPT xt_NFQUEUE xt_NFLOG
+NDM_KMOD_ONDEMAND += ip6t_ipv6header xt_hashlimit xt_LOGMARK
 NDM_KMOD_ONDEMAND += ip_set_hash_ipportnet ip_set_bitmap_port xt_multiport
 NDM_KMOD_ONDEMAND += ip6t_eui64 xt_DHCPMAC xt_psd xt_owner ip6t_frag
 NDM_KMOD_ONDEMAND += xt_quota2 xt_pkttype xt_lscan xt_TPROXY xt_SYSRQ xt_quota
@@ -115,7 +115,7 @@ NDM_KMOD_ONDEMAND += rc-dntv-live-dvb-t rc-technisat-usb2 zl10039 si21xx stb6100
 NDM_KMOD_ONDEMAND += stv0900 stv090x m88ds3103 stb6000 m88rs2000 cx24116 tda10023
 NDM_KMOD_ONDEMAND += sch_ingress sch_codel sch_fq_codel sch_hfsc cls_fw cls_route cls_flow cls_tcindex cls_u32 em_u32
 NDM_KMOD_ONDEMAND += act_mirred act_skbedit act_connmark act_ipt act_police cls_basic em_cmp em_meta em_nbyte
-NDM_KMOD_ONDEMAND += em_text sch_dsmark sch_gred sch_htb sch_prio sch_red sch_sfq sch_tbf sch_teql
+NDM_KMOD_ONDEMAND += em_text sch_dsmark sch_gred sch_htb sch_prio sch_red sch_sfq sch_tbf sch_teql sch_drr
 
 # Filesystems for opkg
 
@@ -344,7 +344,8 @@ ifneq ($(CONFIG_PACKAGE_ndm),)
 	$(SCRIPT_DIR)/ndm_xml.pl $(call qstrip,$(CONFIG_TARGET_ARCH_PACKAGES)) device \
 		$(PACKAGE_DIR)/Packages \
 		$(GIT_TAG) $(BSP_LOCAL) \
-		$(NDM_PACKAGES) \
+		"$(NDM_PACKAGES)" \
+		"$(NDM_UNHIDDEN_PACKAGES)" \
 		> $(TARGET_DIR)/etc/components.xml && \
 		setfattr -n user.package -v ndm $(TARGET_DIR)/etc/components.xml
 	MODULES=$$$$($(TOPDIR)/scripts/mdeps.pl -b $(TARGET_DIR) -k $(LINUX_UNAME_VERSION)) || exit 1; \
@@ -369,6 +370,10 @@ ifneq ($(CONFIG_PACKAGE_ndm),)
 	    fi; \
 	  fi; \
 	  rm -f $(TARGET_DIR)/flash/default-config_gen_$$$${mode}; \
+	done; \
+	for i in $(TARGET_DIR)/flash/default-config*; do \
+		$(SCRIPT_DIR)/ndm_include.pl $(TARGET_DIR)/flash < $$$$i > $$$${i}_inc || { rm -f $$$${i}_inc; exit 1; }; \
+		mv $$$${i}_inc $$$$i; \
 	done; \
 	if $$$$CONFIG_GENERATED; then \
 		sed -i -e 's/$$$$'"/`echo \\\r`/" -e 's/\t/    /g' $(TARGET_DIR)/flash/default-config*; \

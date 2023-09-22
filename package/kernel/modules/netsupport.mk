@@ -475,6 +475,7 @@ define KernelPackage/ipv6
   KCONFIG:= \
 	CONFIG_IPV6=y \
 	CONFIG_IPV6_OPTIMISTIC_DAD=y \
+	CONFIG_IPV6_MULTIPLE_TABLES=y \
 	CONFIG_IPV6_MROUTE=y \
 	CONFIG_IPV6_MROUTE_MULTIPLE_TABLES=y \
 	CONFIG_IPV6_SUBTREES=n \
@@ -541,8 +542,10 @@ $(eval $(call KernelPackage,gre))
 define KernelPackage/tun
   SUBMENU:=$(NETWORK_SUPPORT_MENU)
   TITLE:=Universal TUN/TAP driver
-  KCONFIG:=CONFIG_TUN
-  FILES:=$(LINUX_DIR)/drivers/net/tun.ko
+  KCONFIG:=CONFIG_TUN \
+	CONFIG_VETH
+  FILES:=$(LINUX_DIR)/drivers/net/tun.ko \
+	$(LINUX_DIR)/drivers/net/veth.ko
   AUTOLOAD:=$(call AutoLoad,30,tun)
 endef
 
@@ -768,6 +771,7 @@ define KernelPackage/sched
 	CONFIG_NET_SCH_TBF \
 	CONFIG_NET_SCH_SFQ \
 	CONFIG_NET_SCH_TEQL \
+	CONFIG_NET_SCH_DRR \
 	CONFIG_NET_CLS_BASIC \
 	CONFIG_NET_ACT_POLICE \
 	CONFIG_NET_ACT_IPT \

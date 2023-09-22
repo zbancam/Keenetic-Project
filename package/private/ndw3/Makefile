@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2021 Keenetic Limited
+# Copyright (C) 2023 Keenetic Limited
 #
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
@@ -17,8 +17,8 @@ endef
 
 define Package/ndw3
   CATEGORY:=NDM
-  TITLE:=Next-generation web interface (beta)
-  DEPENDS:=+libc +SSP_SUPPORT:libssp @!USES_NDW2_WIZARD
+  TITLE:=Web interface wizard
+  DEPENDS:=+libc +SSP_SUPPORT:libssp @!USES_NDW2_WIZARD +fonts-roboto
   DISABLE_RSTRIP:=y
 endef
 

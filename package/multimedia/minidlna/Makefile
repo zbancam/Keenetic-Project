@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=minidlna
-PKG_VERSION:=1.3.0-5
+PKG_VERSION:=1.3.0-6
 PKG_LICENSE:=GPL-2.0
 
 PKG_SOURCE_URL:=$(NDM_STORAGE)/$(PKG_NAME)
@@ -24,7 +24,7 @@ define Package/minidlna
   CATEGORY:=Multimedia
   TITLE:=UPnP A/V & DLNA Media Server
   URL:=http://minidlna.sourceforge.net/
-  DEPENDS:=+libpthread +libexif +libjpeg +libsqlite3 +libav +libid3tag +libndm
+  DEPENDS:=+libpthread +libexif +libjpeg-turbo +libsqlite3 +libav +libid3tag +libndm
 endef
 
 define Package/minidlna/description

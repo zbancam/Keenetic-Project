@@ -141,13 +141,14 @@ sub target_config_features(@) {
 		/^no_mmu$/ and $ret .= "\tselect NO_MMU\n";
 		/^band_steering$/ and $ret .= "\tselect HAS_BAND_STEERING\n";
 		/^btmtk$/ and $ret .= "\tselect HAS_BTMTK\n";
-		/^buddy_factory$/ and $ret .= "\tselect BUDDY_FACTORY\n";
 		/^old_model_1$/ and $ret .= "\tselect OLD_MODEL_1\n";
 		/^old_model_2$/ and $ret .= "\tselect OLD_MODEL_2\n";
 		/^radio_(\w+)$/ and $ret .= "\tselect HAS_" . uc $1 . "_RADIO\n";
 		/^ndw2_wizard$/ and $ret .= "\tselect USES_NDW2_WIZARD\n";
 		/^old_modes$/ and $ret .= "\tselect USES_OLD_MODES\n";
 		/^whnat$/ and $ret .= "\tselect HAS_WHNAT\n";
+		/^warp$/ and $ret .= "\tselect HAS_WARP\n";
+		/^conninfra$/ and $ret .= "\tselect HAS_CONNINFRA\n";
 		/^extender$/ and $ret .= "\tselect IS_EXTENDER\n";
 		/^extended_storage$/ and $ret .= "\tselect USES_EXTENDED_STORAGE\n";
 		/^hwnat$/ and $ret .= "\tselect HAS_HWNAT\n";

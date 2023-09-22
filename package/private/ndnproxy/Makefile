@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2021 Keenetic Limited
+# Copyright (C) 2023 Keenetic Limited
 #
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
@@ -18,8 +18,18 @@ endef
 define Package/ndnproxy
   CATEGORY:=Network
   TITLE:=Lightweight DNS proxy
-  DEPENDS:=+libc +SSP_SUPPORT:libssp +librt +libndm
+  DEPENDS:=+libc +SSP_SUPPORT:libssp +librt +libndm +NDNPROXY_BACKTRACE:libfatalsig
   DISABLE_RSTRIP:=y
+endef
+
+define Package/ndnproxy/config
+if PACKAGE_ndnproxy
+
+config NDNPROXY_BACKTRACE
+	bool "Log a backtrace on a server crash"
+	default n
+
+endif
 endef
 
 define Package/ndnproxy/install

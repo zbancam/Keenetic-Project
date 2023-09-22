@@ -131,6 +131,8 @@ XHCI_MODULES := xhci-hcd
 ifeq ($(strip \
 	$(CONFIG_TARGET_mt7621) \
 	$(CONFIG_TARGET_mt7622) \
+	$(CONFIG_TARGET_mt7981) \
+	$(CONFIG_TARGET_mt7986) \
 	$(CONFIG_TARGET_en7512) \
 	$(CONFIG_TARGET_en7516) \
 	$(CONFIG_TARGET_en7528)),y)
@@ -165,6 +167,7 @@ define KernelPackage/usb3/config
 		default y if TARGET_en7516_KN_2112
 		default y if TARGET_mt7621_KN_1910
 		default y if TARGET_mt7621_KN_2310
+		default y if TARGET_mt7621_KN_2910
 		default n
   endif
 endef
@@ -837,6 +840,7 @@ $(eval $(call KernelPackage,usb-net-qmi-wwan))
 
 define KernelPackage/usb-net-r815x
   TITLE:=Kernel module for USB-to-Ethernet RTL815x convertors
+  DEPENDS:=+r815x-firmware
   KCONFIG:=CONFIG_USB_RTL8150 \
 	CONFIG_USB_RTL8152
   FILES:= \
@@ -846,7 +850,7 @@ define KernelPackage/usb-net-r815x
 endef
 
 define KernelPackage/usb-net-r815x/description
- Kernel module for USB-to-Ethernet Realtek 8150/8152 convertors
+ Kernel module for USB-to-Ethernet Realtek 8150/8152/3/6 convertors
 endef
 
 $(eval $(call KernelPackage,usb-net-r815x))

@@ -75,11 +75,20 @@ config USES_NDW2_WIZARD
 config USES_OLD_MODES
 	bool
 
+config IS_EXTENDER
+	bool
+
 config OLD_MODEL_1
 	bool
 
 config OLD_MODEL_2
 	bool
+
+config SYSTEM_MODES
+	string
+	default "extender" if IS_EXTENDER
+	default "ap client repeater router" if USES_OLD_MODES
+	default "extender router"
 
 config PROFILE_KCONFIG
 	bool
@@ -96,28 +105,48 @@ config HAS_BAND_STEERING
 config HAS_BTMTK
 	bool
 
+config HAS_RADIO_MTK
+	bool
+
 config HAS_MT7603_RADIO
+	select HAS_RADIO_MTK
 	bool
 
 config HAS_MT7610_RADIO
+	select HAS_RADIO_MTK
 	bool
 
 config HAS_MT7613_RADIO
+	select HAS_RADIO_MTK
 	bool
 
 config HAS_MT7615_RADIO
+	select HAS_RADIO_MTK
 	bool
 
 config HAS_MT7628_RADIO
+	select HAS_RADIO_MTK
 	bool
 
 config HAS_MT76X2_RADIO
+	select HAS_RADIO_MTK
 	bool
 
 config HAS_MT7915_RADIO
+	select HAS_RADIO_MTK
+	bool
+
+config HAS_MT7916_RADIO
+	select HAS_RADIO_MTK
+	bool
+
+config HAS_CONNINFRA
 	bool
 
 config HAS_WHNAT
+	bool
+
+config HAS_WARP
 	bool
 
 config HAS_HWNAT
@@ -127,12 +156,6 @@ config HAS_HWNAT_MIB
 	bool
 
 config ARCH_64BIT
-	bool
-
-config BUDDY_FACTORY
-	bool
-
-config IS_EXTENDER
 	bool
 
 # Architecture selection

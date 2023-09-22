@@ -12,6 +12,8 @@ ifneq ($(DUMP),1)
 endif
 
 export QUILT=1
+NDM_PRELOADER_HEADER:=$(LINUX_DIR)/drivers/mtd/ndm_preloader.h
+NDM_ATF_HEADER:=$(LINUX_DIR)/drivers/mtd/ndm_atf.h
 NDM_BOOT_HEADER:=$(LINUX_DIR)/drivers/mtd/ndm_boot.h
 STAMP_PREPARED:=$(LINUX_DIR)/.prepared
 STAMP_CONFIGURED:=$(LINUX_DIR)/.configured
@@ -41,14 +43,14 @@ endef
 
 KERNEL_SOURCE_PROTO:=git
 KERNEL_SOURCE_URL:=$(KERNEL_GIT_CLONE_URI)
-KERNEL_SOURCE_FILE:=linux-$(KERNEL_GIT_REVISION).tar.gz
+KERNEL_SOURCE_FILE:=linux-$(KERNEL_GIT_REVISION).tar.zst
 
 define Download/kernel
   PROTO:=$(KERNEL_SOURCE_PROTO)
   URL:=$(KERNEL_SOURCE_URL)
   VERSION:=$(KERNEL_GIT_REVISION)
   SUBDIR:=linux-$(LINUX_VERSION)
-  FILE:=linux-$(KERNEL_GIT_REVISION).tar.gz
+  FILE:=linux-$(KERNEL_GIT_REVISION).tar.zst
   DL_FILE:=$(KERNEL_SOURCE_FILE)
   MD5SUM:=$(LINUX_KERNEL_MD5SUM)
 endef
@@ -70,13 +72,13 @@ define BuildKernel
   $(if $(QUILT),$(Build/Quilt))
   $(call Download,kernel)
 
-  $(STAMP_PREPARED): $(DL_DIR)/linux-$(KERNEL_GIT_REVISION).tar.gz
+  $(STAMP_PREPARED): $(DL_DIR)/linux-$(KERNEL_GIT_REVISION).tar.zst
 	-rm -rf $(KERNEL_BUILD_DIR)
 	-mkdir -p $(KERNEL_BUILD_DIR)
 	$(Kernel/Prepare)
 	touch $$@
 
-  $(KERNEL_BUILD_DIR)/symtab.h: $(if $(CONFIG_KERNEL_MTD_NDM_BOOT_UPDATE),$(NDM_BOOT_HEADER)) FORCE
+  $(KERNEL_BUILD_DIR)/symtab.h: $(if $(CONFIG_KERNEL_MTD_NDM_PRELOADER_UPDATE),$(NDM_PRELOADER_HEADER)) $(if $(CONFIG_KERNEL_MTD_NDM_ATF_UPDATE),$(NDM_ATF_HEADER)) $(if $(CONFIG_KERNEL_MTD_NDM_BOOT_UPDATE),$(NDM_BOOT_HEADER)) FORCE
 	rm -f $(KERNEL_BUILD_DIR)/symtab.h
 	touch $(KERNEL_BUILD_DIR)/symtab.h
 	+$(KERNEL_MAKE) vmlinux
@@ -106,8 +108,14 @@ define BuildKernel
 		echo; \
 	) > $$@
 
+  $(NDM_PRELOADER_HEADER): $(PLATFORM_SUBDIR)/preloader.bin
+	$(SCRIPT_DIR)/ndm_bin_gen_header.sh $$< $$@
+
+  $(NDM_ATF_HEADER): $(PLATFORM_SUBDIR)/atf.bin
+	$(SCRIPT_DIR)/ndm_bin_gen_header.sh $$< $$@
+
   $(NDM_BOOT_HEADER): $(PLATFORM_SUBDIR)/boot.bin
-	$(SCRIPT_DIR)/ndm_boot_gen_header.sh $$< $$@
+	$(SCRIPT_DIR)/ndm_bin_gen_header.sh $$< $$@
 
   $(STAMP_CONFIGURED): $(STAMP_PREPARED) $(LINUX_KCONFIG_LIST) $(TOPDIR)/.config
 	$(Kernel/Configure)
@@ -117,7 +125,7 @@ define BuildKernel
 	$(Kernel/CompileModules)
 	touch $$@
 
-  $(LINUX_DIR)/.image: $(STAMP_CONFIGURED) $(if $(CONFIG_STRIP_KERNEL_EXPORTS),$(KERNEL_BUILD_DIR)/symtab.h) $(if $(CONFIG_KERNEL_MTD_NDM_BOOT_UPDATE),$(NDM_BOOT_HEADER)) FORCE
+  $(LINUX_DIR)/.image: $(STAMP_CONFIGURED) $(if $(CONFIG_STRIP_KERNEL_EXPORTS),$(KERNEL_BUILD_DIR)/symtab.h) $(if $(CONFIG_KERNEL_MTD_NDM_PRELOADER_UPDATE),$(NDM_PRELOADER_HEADER)) $(if $(CONFIG_KERNEL_MTD_NDM_ATF_UPDATE),$(NDM_ATF_HEADER)) $(if $(CONFIG_KERNEL_MTD_NDM_BOOT_UPDATE),$(NDM_BOOT_HEADER)) FORCE
 	$(Kernel/CompileImage)
 	$(Kernel/CollectDebug)
 	touch $$@
@@ -128,16 +136,16 @@ define BuildKernel
   define BuildKernel
   endef
 
-  download: $(DL_DIR)/linux-$(KERNEL_GIT_REVISION).tar.gz
+  download: $(DL_DIR)/linux-$(KERNEL_GIT_REVISION).tar.zst
   prepare: $(STAMP_CONFIGURED)
   compile: $(LINUX_DIR)/.modules
 	$(MAKE) -C image compile TARGET_BUILD=
 
   oldconfig menuconfig nconfig: $(STAMP_PREPARED) $(STAMP_CHECKED) FORCE
 	rm -f $(STAMP_CONFIGURED)
-	$(LINUX_RECONF_CMD) > $(LINUX_DIR)/.config
-	$(_SINGLE)$(KERNEL_MAKE) $$@
-	$(LINUX_RECONF_DIFF) $(LINUX_DIR)/.config > $(LINUX_RECONFIG_TARGET)
+	$(LINUX_RECONF_CMD) > $(LINUX_DIR)/.config.reconf
+	$(_SINGLE) KCONFIG_CONFIG=$(LINUX_DIR)/.config.reconf $(KERNEL_MAKE) $$@
+	$(LINUX_RECONF_DIFF) $(LINUX_DIR)/.config.reconf > $(LINUX_RECONFIG_TARGET)
 
   install: $(LINUX_DIR)/.image
 	+$(MAKE) -C image compile install TARGET_BUILD=

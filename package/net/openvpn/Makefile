@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=openvpn
-PKG_VERSION:=2.4.6-12
+PKG_VERSION:=2.6.0-4
 PKG_LICENSE:=GPL-2.0
 
 PKG_SOURCE_URL:=$(NDM_STORAGE)/openvpn
@@ -30,11 +30,12 @@ define Package/openvpn
   CATEGORY:=Network
   URL:=http://openvpn.net
   SUBMENU:=VPN
-  DEPENDS:=+kmod-tun +liblzo +libopenssl +libndm
+  DEPENDS:=+kmod-tun +liblzo +liblz4 +libopenssl +libndm +libcap-ng
 endef
 
 EXTRA_CFLAGS   := -ffunction-sections \
-                  -fdata-sections
+                  -fdata-sections \
+                  -Werror
 
 EXTRA_LDFLAGS  := -Wl,--gc-sections
 
@@ -47,15 +48,16 @@ CONFIGURE_ARGS += \
 		--disable-pkcs11 \
 		--enable-lzo \
 		--enable-lz4 \
-		--enable-server \
 		--disable-management \
 		--enable-fragment \
-		--disable-multihome \
 		--disable-iproute2 \
-		--enable-def-auth \
-		--enable-pf \
+		--enable-ofb-cfb \
+		--disable-plugin-auth-pam \
+		--disable-plugin-down-root \
 		--enable-ndm-integration \
+		--disable-unit-tests \
 		--with-crypto-library=openssl \
+		--disable-unit-tests
 
 define Package/openvpn/install
 	$(INSTALL_DIR) $(1)/usr/sbin
