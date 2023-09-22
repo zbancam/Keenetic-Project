@@ -204,6 +204,7 @@ ifeq ($(DUMP),)
 		done; \
 		echo "Regions: $$$$REGIONS"; \
 		echo "Hidden: $(HIDDEN)"; \
+		echo "Implicit: $(IMPLICIT)"; \
 		echo "Obsolete: $(OBSOLETE)"; \
 		echo "Stage: $(STAGE)"; \
 		echo "Sort-Order: $(SORT_ORDER)"; \
@@ -211,9 +212,16 @@ ifeq ($(DUMP),)
 		echo "Maintainer: $(MAINTAINER)"; \
 		echo "Architecture: $(PKGARCH)"; \
 		echo "Installed-Size: 0"; \
-		echo -n "Description: "; $(SH_FUNC) getvar $(call shvar,Package/$(1)/description) | sed -e 's,^[[:space:]]*, ,g'; \
-		echo -n "Script: "; $(SH_FUNC) getvar $(call shvar,Package/$(1)/script) | sed -e 's,^[[:space:]]*, ,g'; \
-		echo "@@" \
+		echo -n "Description: "; $(SH_FUNC) getvar $(call shvar,Package/$(1)/description) | \
+			sed -e 's,^[[:space:]]*, ,g'; \
+			echo; \
+		for mode in $(call qstrip,$(CONFIG_SYSTEM_MODES)); do \
+			echo -n "Script-$$$$(echo $$$$mode | sed 's/./\U&/'): "; \
+			$(SH_FUNC) getvar $(call shvar,Package/$(1)/script/$$$$mode) | \
+			($(SCRIPT_DIR)/ndm_include.pl $$(IDIR_$(1))/flash || exit 1) | \
+			base64 --wrap=0; \
+			echo; \
+		done \
  	) > $$(IDIR_$(1))/CONTROL/control
 	if [ ! -f $$(LDIR_$(1))/TITLE ]; then \
 		[ -z "$(URL)" ] || echo "$(URL)" > $$(LDIR_$(1))/HOMEPAGE; \
